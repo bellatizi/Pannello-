@@ -1,0 +1,77 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vie del Pannello</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #f0f0f0; margin: 0; padding: 20px;}
+        .controlli { display: block; margin: 0 auto 20px auto; background: white; padding: 15px; border-radius: 8px; max-width: 800px;}
+        #muro-container { position: relative; display: block; margin: 0 auto; width: 100%; max-width: 800px; }
+        #muro-container img { width: 100%; display: block; }
+        .presa { position: absolute; width: 4%; aspect-ratio: 1 / 1; border-radius: 50%; transform: translate(-50%, -50%); border: 2px solid transparent; pointer-events: none; }
+        .presa.attiva { border-color: red; background-color: rgba(255, 0, 0, 0.4); }
+        select { padding: 10px; font-size: 16px; margin: 10px; width: 80%; max-width: 300px; cursor: pointer; }
+        h2 { margin-top: 0; }
+    </style>
+</head>
+<body>
+    <div class="controlli">
+        <h2> Blocchi Pannello</h2>
+        <select id="selettore-vie" onchange="caricaViaDalMenu()">
+            <option value="">-- Seleziona una via --</option>
+        </select>
+    </div>
+
+    <div id="muro-container">
+        <img src="fotopannello.png" alt="Pannello">
+    </div>
+
+    <script>
+        // Le coordinate delle prese (invariate)
+        const prese = [
+            { id: 0, x: 91.35, y: 92.68 }, { id: 1, x: 87.35, y: 83.92 }, { id: 2, x: 84.22, y: 87.47 }, { id: 3, x: 84.47, y: 92.68 }, { id: 4, x: 90.60, y: 70.88 }, { id: 5, x: 74.60, y: 96.60 }, { id: 6, x: 67.35, y: 96.41 }, { id: 7, x: 81.22, y: 73.68 }, { id: 8, x: 77.85, y: 82.06 }, { id: 9, x: 74.35, y: 73.30 }, { id: 10, x: 70.97, y: 76.10 }, { id: 11, x: 70.85, y: 82.25 }, { id: 12, x: 66.97, y: 78.33 }, { id: 13, x: 63.35, y: 81.87 }, { id: 14, x: 63.60, y: 88.77 }, { id: 15, x: 59.60, y: 91.01 }, { id: 16, x: 59.35, y: 84.48 }, { id: 17, x: 81.85, y: 62.87 }, { id: 18, x: 59.47, y: 73.12 }, { id: 19, x: 55.72, y: 75.73 }, { id: 20, x: 55.85, y: 81.87 }, { id: 21, x: 51.85, y: 79.08 }, { id: 22, x: 51.47, y: 91.01 }, { id: 23, x: 51.47, y: 97.16 }, { id: 24, x: 46.97, y: 82.25 }, { id: 25, x: 46.60, y: 87.47 }, { id: 26, x: 42.35, y: 97.16 }, { id: 27, x: 46.85, y: 70.32 }, { id: 28, x: 43.47, y: 76.84 }, { id: 29, x: 39.35, y: 71.25 }, { id: 30, x: 38.97, y: 88.77 }, { id: 31, x: 31.47, y: 93.61 }, { id: 32, x: 35.35, y: 84.67 }, { id: 33, x: 35.35, y: 78.52 }, { id: 34, x: 31.72, y: 82.43 }, { id: 35, x: 27.97, y: 79.27 }, { id: 36, x: 27.97, y: 73.30 }, { id: 37, x: 31.85, y: 70.88 }, { id: 38, x: 24.47, y: 88.58 }, { id: 39, x: 17.72, y: 92.87 }, { id: 40, x: 8.72, y: 95.29 }, { id: 41, x: 8.60, y: 85.04 }, { id: 42, x: 15.60, y: 80.01 }, { id: 43, x: 21.60, y: 79.45 }, { id: 44, x: 21.72, y: 73.86 }, { id: 45, x: 21.85, y: 69.02 }, { id: 46, x: 21.85, y: 64.36 }, { id: 47, x: 15.85, y: 69.02 }, { id: 48, x: 12.47, y: 72.56 }, { id: 49, x: 9.35, y: 74.79 }, { id: 50, x: 9.97, y: 58.58 }, { id: 51, x: 12.97, y: 46.80 }, { id: 52, x: 19.22, y: 51.65 }, { id: 53, x: 19.22, y: 45.87 }, { id: 54, x: 18.85, y: 40.65 }, { id: 55, x: 15.22, y: 33.20 }, { id: 56, x: 11.85, y: 30.03 }, { id: 57, x: 17.35, y: 29.47 }, { id: 58, x: 17.35, y: 24.63 }, { id: 59, x: 13.60, y: 10.84 }, { id: 60, x: 10.35, y: 8.98 }, { id: 61, x: 51.35, y: 62.08 }, { id: 62, x: 43.10, y: 58.54 }, { id: 63, x: 32.35, y: 62.27 }, { id: 64, x: 35.60, y: 58.54 }, { id: 65, x: 35.85, y: 53.14 }, { id: 66, x: 35.22, y: 47.18 }, { id: 67, x: 31.97, y: 45.31 }, { id: 68, x: 28.35, y: 47.55 }, { id: 69, x: 28.47, y: 53.33 }, { id: 70, x: 28.47, y: 59.10 }, { id: 71, x: 25.35, y: 45.87 }, { id: 72, x: 24.97, y: 40.10 }, { id: 73, x: 27.85, y: 38.42 }, { id: 74, x: 27.85, y: 33.01 }, { id: 75, x: 24.35, y: 30.22 }, { id: 76, x: 27.35, y: 27.98 }, { id: 77, x: 27.35, y: 21.65 }, { id: 78, x: 23.35, y: 12.70 }, { id: 79, x: 26.85, y: 5.62 }, { id: 80, x: 34.10, y: 9.72 }, { id: 81, x: 31.22, y: 19.60 }, { id: 82, x: 31.22, y: 25.56 }, { id: 83, x: 34.85, y: 28.17 }, { id: 84, x: 38.97, y: 30.96 }, { id: 85, x: 34.85, y: 33.76 }, { id: 86, x: 34.85, y: 38.42 }, { id: 87, x: 38.72, y: 39.91 }, { id: 88, x: 39.47, y: 45.13 }, { id: 89, x: 39.10, y: 30.96 }, { id: 90, x: 51.35, y: 5.81 }, { id: 91, x: 46.85, y: 11.40 }, { id: 92, x: 43.22, y: 14.75 }, { id: 93, x: 38.35, y: 17.92 }, { id: 94, x: 46.85, y: 18.48 }, { id: 95, x: 42.85, y: 21.27 }, { id: 96, x: 42.85, y: 26.49 }, { id: 97, x: 42.72, y: 33.20 }, { id: 98, x: 46.85, y: 30.03 }, { id: 99, x: 59.97, y: 61.34 }, { id: 100, x: 64.35, y: 64.88 }, { id: 101, x: 70.35, y: 59.85 }, { id: 102, x: 70.72, y: 65.25 }, { id: 103, x: 77.72, y: 59.66 }, { id: 104, x: 61.72, y: 7.67 }, { id: 105, x: 71.97, y: 5.25 }, { id: 106, x: 84.35, y: 5.99 }, { id: 107, x: 81.85, y: 51.28 }, { id: 108, x: 82.22, y: 45.50 }, { id: 109, x: 87.35, y: 42.33 }, { id: 110, x: 51.47, y: 33.20 }, { id: 111, x: 58.35, y: 33.76 }, { id: 112, x: 57.97, y: 38.98 }, { id: 113, x: 57.72, y: 44.20 }, { id: 114, x: 54.35, y: 41.96 }, { id: 115, x: 51.47, y: 39.16 }, { id: 116, x: 55.22, y: 47.74 }, { id: 117, x: 58.35, y: 53.70 }, { id: 118, x: 54.97, y: 52.21 }, { id: 119, x: 51.47, y: 49.41 }, { id: 120, x: 47.35, y: 50.53 }, { id: 121, x: 46.72, y: 45.13 }, { id: 122, x: 67.35, y: 51.09 }, { id: 123, x: 64.10, y: 54.44 }, { id: 124, x: 64.22, y: 49.60 }, { id: 125, x: 67.22, y: 45.50 }, { id: 126, x: 64.35, y: 44.01 }, { id: 127, x: 64.35, y: 38.60 }, { id: 128, x: 64.10, y: 33.95 }, { id: 129, x: 61.22, y: 29.66 }, { id: 130, x: 57.85, y: 27.05 }, { id: 131, x: 54.47, y: 25.00 }, { id: 132, x: 51.47, y: 22.58 }, { id: 133, x: 55.22, y: 20.16 }, { id: 134, x: 54.97, y: 14.19 }, { id: 135, x: 74.72, y: 52.02 }, { id: 136, x: 74.22, y: 45.13 }, { id: 137, x: 71.47, y: 39.72 }, { id: 138, x: 78.72, y: 38.42 }, { id: 139, x: 78.60, y: 33.95 }, { id: 140, x: 75.47, y: 31.15 }, { id: 141, x: 71.10, y: 33.20 }, { id: 142, x: 75.47, y: 25.75 }, { id: 143, x: 79.10, y: 27.42 }, { id: 144, x: 83.10, y: 30.59 }, { id: 145, x: 87.22, y: 26.49 }, { id: 146, x: 83.10, y: 17.73 }, { id: 147, x: 79.47, y: 14.01 }, { id: 148, x: 71.85, y: 16.24 }, { id: 149, x: 67.85, y: 25.00 }, { id: 150, x: 64.22, y: 16.43 }, { id: 151, x: 60.85, y: 19.04 }
+        ];
+
+        // INCOLLA QUI IL CONTENUTO DEL TUO FILE .json ESPORTATO
+        const databaseVie = [
+            // Esempio:
+            // {"nome":"Riscaldamento","grado":"5","prese":[2,10,25]},
+            // {"nome":"Progetto","grado":"7A","prese":[105,120,131]}
+        ];
+
+        const container = document.getElementById('muro-container');
+        const selettore = document.getElementById('selettore-vie');
+
+        // Popola il menu a tendina
+        databaseVie.forEach((via, indice) => {
+            let opzione = document.createElement('option');
+            opzione.value = indice;
+            opzione.text = `${via.nome} (${via.grado})`;
+            selettore.appendChild(opzione);
+        });
+
+        // Disegna le prese (non cliccabili)
+        prese.forEach(p => {
+            let cerchio = document.createElement('div');
+            cerchio.className = 'presa';
+            cerchio.style.left = p.x + '%';
+            cerchio.style.top = p.y + '%';
+            cerchio.id = 'presa-' + p.id;
+            container.appendChild(cerchio);
+        });
+
+        // Accende le prese in base alla via scelta
+        function caricaViaDalMenu() {
+            document.querySelectorAll('.presa').forEach(c => c.classList.remove('attiva'));
+            const indiceScelto = selettore.value;
+            
+            if (indiceScelto !== "") {
+                databaseVie[indiceScelto].prese.forEach(id => {
+                    const cerchio = document.getElementById('presa-' + id);
+                    if (cerchio) cerchio.classList.add('attiva');
+                });
+            }
+        }
+    </script>
+</body>
+</html>
