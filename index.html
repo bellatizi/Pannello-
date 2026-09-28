@@ -1,35 +1,54 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Pannello Arrampicata</title>
+    <title>Pannello Arrampicata - Creatore</title>
     <style>
         body { font-family: sans-serif; text-align: center; background: #f0f0f0; margin: 0; padding: 20px;}
         .controlli { display: block; margin: 0 auto 20px auto; background: white; padding: 15px; border-radius: 8px; max-width: 800px;}
         #muro-container { position: relative; display: block; margin: 0 auto; width: 100%; max-width: 800px; }
         #muro-container img { width: 100%; display: block; }
         .presa { position: absolute; width: 4%; aspect-ratio: 1 / 1; border-radius: 50%; transform: translate(-50%, -50%); cursor: pointer; border: 2px solid transparent; }
-        .presa:hover { border-color: rgba(255,0,0,0.5); }
-        .presa.attiva { border-color: red; background-color: rgba(255, 0, 0, 0.4); }
+        .presa:hover { border-color: rgba(255,255,255,0.8); }
+        
+        /* Colori per le varie tipologie */
+        .presa.inizio { border-color: #00ff00; background-color: rgba(0, 255, 0, 0.5); }
+        .presa.fine { border-color: #ff0000; background-color: rgba(255, 0, 0, 0.5); }
+        .presa.entrambi { border-color: #0080ff; background-color: rgba(0, 128, 255, 0.5); }
+        .presa.mano { border-color: #cc00cc; background-color: rgba(204, 0, 204, 0.5); }
+        .presa.piede { border-color: #ffff00; background-color: rgba(255, 255, 0, 0.5); }
+
         button, input, select { padding: 8px; font-size: 14px; margin: 5px; cursor: pointer; }
         #link-output { width: 90%; max-width: 600px; margin-top: 10px; cursor: text; }
         .riga-input { margin-top: 15px; padding-top: 15px; border-top: 1px solid #ccc; }
+        
+        .strumenti-pennello label { margin: 0 10px; cursor: pointer; font-weight: bold; }
+        .legenda-colori { display: inline-block; width: 15px; height: 15px; border-radius: 50%; vertical-align: middle; margin-right: 5px; }
     </style>
 </head>
 <body>
     <div class="controlli">
-        <h2>Pannello Arrampicata</h2>
+        <h2>Pannello Arrampicata - Creatore</h2>
         
         <label for="selettore-vie"><strong>Le mie vie: </strong></label>
         <select id="selettore-vie" onchange="caricaViaDalMenu()">
             <option value="">-- Seleziona --</option>
         </select>
         <button onclick="eliminaVia()">Elimina Selezionata</button>
-        
-        <br><br>
         <button onclick="pulisci()">Pulisci Pannello</button>
-        <button onclick="salvaLink()">Genera Link Via Corrente</button>
-        <br>
-        <input type="text" id="link-output" readonly>
+        
+        <div class="riga-input strumenti-pennello">
+            <strong>Seleziona il tipo di presa, poi clicca sul pannello:</strong><br><br>
+            <label><input type="radio" name="tipo-presa" value="inizio"><span class="legenda-colori" style="background:#00ff00;"></span>Inizio</label>
+            <label><input type="radio" name="tipo-presa" value="entrambi" checked><span class="legenda-colori" style="background:#0080ff;"></span>Mani/Piedi</label>
+            <label><input type="radio" name="tipo-presa" value="mano"><span class="legenda-colori" style="background:#cc00cc;"></span>Solo Mani</label>
+            <label><input type="radio" name="tipo-presa" value="piede"><span class="legenda-colori" style="background:#ffff00;"></span>Solo Piedi</label>
+            <label><input type="radio" name="tipo-presa" value="fine"><span class="legenda-colori" style="background:#ff0000;"></span>Fine (Top)</label>
+        </div>
+
+        <div class="riga-input">
+            <button onclick="salvaLink()">Genera Link Via Corrente</button><br>
+            <input type="text" id="link-output" readonly>
+        </div>
 
         <div class="riga-input">
             <strong>Salva nuova via:</strong><br>
@@ -38,7 +57,6 @@
             <button onclick="salvaNelMenu()">Salva nel Menu</button>
         </div>
 
-        <!-- SEZIONE ESPORTA/IMPORTA -->
         <div class="riga-input">
             <strong>Trasferimento Dati:</strong><br>
             <button onclick="esportaVie()">Esporta Vie (Download .json)</button>
@@ -58,7 +76,7 @@
 
         const container = document.getElementById('muro-container');
         const selettore = document.getElementById('selettore-vie');
-        let preseSelezionate = new Set();
+        let preseSelezionate = new Map(); // Ora è una Map: idPresa -> tipoPresa
         
         let databaseVie = JSON.parse(localStorage.getItem('databaseVie')) || [];
 
@@ -82,12 +100,15 @@
             cerchio.id = 'presa-' + p.id;
 
             cerchio.onclick = function() {
-                if (preseSelezionate.has(p.id)) {
+                const tipoSelezionato = document.querySelector('input[name="tipo-presa"]:checked').value;
+                
+                // Se la presa ha già lo stesso tipo, la spengo. Altrimenti la accendo col nuovo tipo.
+                if (preseSelezionate.has(p.id) && preseSelezionate.get(p.id) === tipoSelezionato) {
                     preseSelezionate.delete(p.id);
-                    cerchio.classList.remove('attiva');
+                    cerchio.className = 'presa';
                 } else {
-                    preseSelezionate.add(p.id);
-                    cerchio.classList.add('attiva');
+                    preseSelezionate.set(p.id, tipoSelezionato);
+                    cerchio.className = 'presa ' + tipoSelezionato;
                 }
                 selettore.value = ""; 
             };
@@ -96,7 +117,7 @@
 
         function pulisci() {
             preseSelezionate.clear();
-            document.querySelectorAll('.presa').forEach(c => c.classList.remove('attiva'));
+            document.querySelectorAll('.presa').forEach(c => c.className = 'presa');
             document.getElementById('link-output').value = '';
             document.getElementById('nome-via').value = '';
             document.getElementById('grado-via').value = '';
@@ -105,7 +126,10 @@
 
         function salvaLink() {
             if (preseSelezionate.size === 0) return alert("Seleziona delle prese!");
-            const lista = Array.from(preseSelezionate).join(',');
+            // Formato breve per URL: id-inizialetipo (es. 12-e, 5-i, 45-p)
+            const lista = Array.from(preseSelezionate.entries())
+                               .map(([id, tipo]) => id + '-' + tipo.charAt(0))
+                               .join(',');
             document.getElementById('link-output').value = window.location.href.split('?')[0] + "?vie=" + lista;
         }
 
@@ -115,7 +139,10 @@
             if (preseSelezionate.size === 0) return alert("Seleziona le prese sul muro!");
             if (!nome || !grado) return alert("Inserisci Nome e Grado!");
 
-            databaseVie.push({ nome: nome, grado: grado, prese: Array.from(preseSelezionate) });
+            // Salvo le prese come array di oggetti {id, tipo}
+            const arrayPrese = Array.from(preseSelezionate, ([id, tipo]) => ({ id: id, tipo: tipo }));
+            
+            databaseVie.push({ nome: nome, grado: grado, prese: arrayPrese });
             localStorage.setItem('databaseVie', JSON.stringify(databaseVie));
             aggiornaMenu();
             alert("Via salvata!");
@@ -130,24 +157,31 @@
             pulisci();
         }
 
+        function accendiPresa(id, tipo) {
+            const cerchio = document.getElementById('presa-' + id);
+            if (cerchio) {
+                cerchio.className = 'presa ' + tipo;
+                preseSelezionate.set(id, tipo);
+            }
+        }
+
         function caricaViaDalMenu() {
             const indiceScelto = selettore.value;
             preseSelezionate.clear();
-            document.querySelectorAll('.presa').forEach(c => c.classList.remove('attiva'));
+            document.querySelectorAll('.presa').forEach(c => c.className = 'presa');
             document.getElementById('link-output').value = '';
             
             if (indiceScelto !== "") {
-                databaseVie[indiceScelto].prese.forEach(id => {
-                    const cerchio = document.getElementById('presa-' + id);
-                    if (cerchio) {
-                        cerchio.classList.add('attiva');
-                        preseSelezionate.add(id);
-                    }
+                databaseVie[indiceScelto].prese.forEach(p => {
+                    // Retrocompatibilità: se p è un numero (vecchio json), assegna 'entrambi'
+                    const id = typeof p === 'object' ? p.id : p;
+                    const tipo = typeof p === 'object' ? p.tipo : 'entrambi';
+                    accendiPresa(id, tipo);
                 });
             }
         }
 
-        // ESORTA FILE JSON
+        // ESPORTA FILE JSON
         function esportaVie() {
             if (databaseVie.length === 0) return alert("Non ci sono vie da esportare!");
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(databaseVie));
@@ -167,7 +201,6 @@
             reader.onload = function(e) {
                 try {
                     const vieImportate = JSON.parse(e.target.result);
-                    // Aggiunge le nuove vie a quelle già esistenti
                     databaseVie = databaseVie.concat(vieImportate);
                     localStorage.setItem('databaseVie', JSON.stringify(databaseVie));
                     aggiornaMenu();
@@ -175,24 +208,35 @@
                 } catch (error) {
                     alert("Errore nel file. Assicurati di aver selezionato il .json corretto.");
                 }
-                event.target.value = ""; // Resetta l'input per poter ricaricare lo stesso file
+                event.target.value = "";
             };
             reader.readAsText(file);
         }
 
+        // Lettura link web
         window.onload = function() {
             const parametri = new URLSearchParams(window.location.search);
             const vieStringa = parametri.get('vie');
             if (vieStringa) {
-                const idDaAccendere = vieStringa.split(',').map(Number);
-                idDaAccendere.forEach(id => {
-                    const cerchio = document.getElementById('presa-' + id);
-                    if (cerchio) {
-                        cerchio.classList.add('attiva');
-                        preseSelezionate.add(id);
-                    }
+                // Supporta sia link vecchi (12,14,15) che nuovi (12-e,14-i,15-p)
+                vieStringa.split(',').forEach(item => {
+                    let parti = item.split('-');
+                    let id = Number(parti[0]);
+                    let letteraTipo = parti[1] || 'e'; // default 'e' se è un link vecchio
+                    
+                    let tipo = 'entrambi';
+                    if (letteraTipo === 'i') tipo = 'inizio';
+                    if (letteraTipo === 'f') tipo = 'fine';
+                    if (letteraTipo === 'm') tipo = 'mano';
+                    if (letteraTipo === 'p') tipo = 'piede';
+                    
+                    accendiPresa(id, tipo);
                 });
             }
+        };
+    </script>
+</body>
+</html>
         };
     </script>
 </body>
